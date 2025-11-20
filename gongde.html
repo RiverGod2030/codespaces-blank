@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛博功德箱 - Cyber Merit Box</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a0033 50%, #0a0e27 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 背景粒子效果 */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        /* 标题 */
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            color: #8B7355;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5)); }
+            to { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8)); }
+        }
+
+        /* 功德显示 */
+        .merit-display {
+            background: rgba(20, 20, 40, 0.8);
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .merit-display::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700, #FFA500);
+            border-radius: 20px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s;
+        }
+
+        .merit-display.pulse::before {
+            animation: borderPulse 0.5s ease-out;
+        }
+
+        @keyframes borderPulse {
+            0% { opacity: 0; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        .merit-label {
+            color: #8B7355;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .merit-count {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            transition: transform 0.3s;
+        }
+
+        .merit-count.bounce {
+            animation: bounce 0.5s ease-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* 功德按钮 */
+        .merit-button {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a0033;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .merit-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(255, 215, 0, 0.6);
+        }
+
+        .merit-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .merit-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .merit-button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* 金光效果 */
+        .golden-light {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .light-ray {
+            position: absolute;
+            width: 4px;
+            height: 100px;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                rgba(255, 215, 0, 0.8), 
+                transparent);
+            transform-origin: center top;
+            animation: rayFall 1s ease-out forwards;
+        }
+
+        @keyframes rayFall {
+            0% {
+                transform: translateY(-100px) scaleY(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(300px) scaleY(1);
+                opacity: 0;
+            }
+        }
+
+        /* 浮动文字 */
+        .floating-text {
+            position: fixed;
+            color: #FFD700;
+            font-size: 2rem;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 101;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            animation: floatUp 2s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-150px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* 成就提示 */
+        .achievement {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.9), rgba(255, 165, 0, 0.9));
+            color: #1a0033;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transition: right 0.5s ease-out;
+            font-weight: bold;
+        }
+
+        .achievement.show {
+            right: 20px;
+        }
+
+        /* 统计信息 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .stat-item {
+            background: rgba(20, 20, 40, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-label {
+            color: #8B7355;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #FFD700;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        /* 佛言 */
+        .buddha-quote {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(20, 20, 40, 0.6);
+            border-left: 3px solid #FFD700;
+            border-radius: 5px;
+            color: #8B7355;
+            font-style: italic;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .merit-button {
+                width: 120px;
+                height: 120px;
+                font-size: 1.2rem;
+            }
+            
+            .merit-count {
+                font-size: 2.5rem;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="container">
+        <h1 class="title">赛博功德箱</h1>
+        <p class="subtitle">数字时代的慈悲与智慧</p>
+        
+        <div class="merit-display" id="meritDisplay">
+            <div class="merit-label">当前功德</div>
+            <div class="merit-count" id="meritCount">0</div>
+        </div>
+        
+        <button class="merit-button" id="meritButton">
+            积功德
+        </button>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">今日功德</div>
+                <div class="stat-value" id="todayMerit">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">连续天数</div>
+                <div class="stat-value" id="streak">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">功德等级</div>
+                <div class="stat-value" id="level">凡人</div>
+            </div>
+        </div>
+        
+        <div class="buddha-quote" id="quote">
+            "一念善心，即是功德；一念慈悲，即是福田。"
+        </div>
+    </div>
+    
+    <div class="achievement" id="achievement"></div>
+
+    <script>
+        // 初始化变量
+        let merit = parseInt(localStorage.getItem('merit') || '0');
+        let todayMerit = parseInt(localStorage.getItem('todayMerit') || '0');
+        let lastDate = localStorage.getItem('lastDate') || new Date().toDateString();
+        let streak = parseInt(localStorage.getItem('streak') || '1');
+        
+        // 佛言警句
+        const quotes = [
+            "一念善心，即是功德；一念慈悲，即是福田。",
+            "善行如灯，照亮黑暗；功德如水，滋养心田。",
+            "积德虽无人见，存心自有天知。",
+            "种善因，得善果；种恶因，得恶果。",
+            "慈悲无碍，智慧无边。",
+            "心净则国土净，心安则众生安。",
+            "一花一世界，一叶一菩提。",
+            "诸恶莫作，众善奉行。"
+        ];
+        
+        // 成就系统
+        const achievements = [
+            { count: 1, title: "初入佛门", message: "恭喜您开始积累功德！" },
+            { count: 10, title: "善心萌芽", message: "功德已达10点！" },
+            { count: 50, title: "慈悲为怀", message: "功德已达50点！" },
+            { count: 100, title: "功德无量", message: "功德已达100点！" },
+            { count: 500, title: "菩萨心肠", message: "功德已达500点！" },
+            { count: 1000, title: "佛陀之光", message: "功德已达1000点！" },
+            { count: 5000, title: "功德圆满", message: "功德已达5000点！" },
+            { count: 10000, title: "赛博佛陀", message: "功德已达10000点！" }
+        ];
+        
+        // 等级系统
+        const levels = [
+            { min: 0, title: "凡人" },
+            { min: 10, title: "善信" },
+            { min: 50, title: "居士" },
+            { min: 100, title: "行者" },
+            { min: 500, title: "菩萨" },
+            { min: 1000, title: "罗汉" },
+            { min: 5000, title: "佛陀" },
+            { min: 10000, title: "赛博佛" }
+        ];
+        
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('meritCount').textContent = merit;
+            document.getElementById('todayMerit').textContent = todayMerit;
+            document.getElementById('streak').textContent = streak;
+            
+            // 更新等级
+            const currentLevel = levels.reverse().find(l => merit >= l.min);
+            document.getElementById('level').textContent = currentLevel.title;
+            levels.reverse();
+            
+            // 保存到本地存储
+            localStorage.setItem('merit', merit.toString());
+            localStorage.setItem('todayMerit', todayMerit.toString());
+            localStorage.setItem('lastDate', lastDate);
+            localStorage.setItem('streak', streak.toString());
+        }
+        
+        // 创建金光效果
+        function createGoldenLight(x, y) {
+            const light = document.createElement('div');
+            light.className = 'golden-light';
+            light.style.left = x + 'px';
+            light.style.top = y + 'px';
+            
+            // 创建多条光线
+            for (let i = 0; i < 8; i++) {
+                const ray = document.createElement('div');
+                ray.className = 'light-ray';
+                ray.style.transform = `rotate(${i * 45}deg)`;
+                light.appendChild(ray);
+            }
+            
+            document.body.appendChild(light);
+            
+            setTimeout(() => {
+                light.remove();
+            }, 1000);
+        }
+        
+        // 创建浮动文字
+        function createFloatingText(x, y, text) {
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-text';
+            floatingText.textContent = text;
+            floatingText.style.left = x + 'px';
+            floatingText.style.top = y + 'px';
+            
+            document.body.appendChild(floatingText);
+            
+            setTimeout(() => {
+                floatingText.remove();
+            }, 2000);
+        }
+        
+        // 显示成就
+        function showAchievement(title, message) {
+            const achievementEl = document.getElementById('achievement');
+            achievementEl.innerHTML = `<strong>${title}</strong><br>${message}`;
+            achievementEl.classList.add('show');
+            
+            setTimeout(() => {
+                achievementEl.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 检查成就
+        function checkAchievements() {
+            const achievement = achievements.find(a => a.count === merit);
+            if (achievement) {
+                showAchievement(achievement.title, achievement.message);
+            }
+        }
+        
+        // 更新佛言
+        function updateQuote() {
+            const quoteEl = document.getElementById('quote');
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            quoteEl.style.opacity = '0';
+            
+            setTimeout(() => {
+                quoteEl.textContent = `"${randomQuote}"`;
+                quoteEl.style.opacity = '1';
+            }, 300);
+        }
+        
+        // 粒子背景
+        function initParticles() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const particleCount = 50;
+            
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.opacity = Math.random() * 0.5 + 0.2;
+                }
+                
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.y > canvas.height) this.y = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                }
+                
+                draw() {
+                    ctx.fillStyle = `rgba(255, 215, 0, ${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+        
+        // 检查日期
+        function checkDate() {
+            const today = new Date().toDateString();
+            if (lastDate !== today) {
+                todayMerit = 0;
+                lastDate = today;
+                
+                // 计算连续天数
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (lastDate === yesterday.toDateString()) {
+                    streak++;
+                } else {
+                    streak = 1;
+                }
+            }
+        }
+        
+        // 主按钮点击事件
+        document.getElementById('meritButton').addEventListener('click', function(e) {
+            // 增加功德
+            merit++;
+            todayMerit++;
+            
+            // 动画效果
+            const meritDisplay = document.getElementById('meritDisplay');
+            const meritCount = document.getElementById('meritCount');
+            
+            meritDisplay.classList.add('pulse');
+            meritCount.classList.add('bounce');
+            
+            setTimeout(() => {
+                meritDisplay.classList.remove('pulse');
+                meritCount.classList.remove('bounce');
+            }, 500);
+            
+            // 创建特效
+            const rect = this.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            
+            createGoldenLight(x, y);
+            createFloatingText(x, y, '+1 功德');
+            
+            // 震动反馈（如果支持）
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            // 更新显示
+            updateDisplay();
+            
+            // 检查成就
+            checkAchievements();
+            
+            // 随机更新佛言
+            if (Math.random() < 0.1) {
+                updateQuote();
+            }
+        });
+        
+        // 初始化
+        checkDate();
+        updateDisplay();
+        initParticles();
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                document.getElementById('meritButton').click();
+            }
+        });
+    </script>
+</body>
+</html>
